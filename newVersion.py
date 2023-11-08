@@ -6,9 +6,9 @@ from collections import defaultdict
 
 tamanho_populacao = 100
 quantidade_geracoes = 100
-taxa_sobrevivencia = 0.60
-taxa_cruzamento = 0.40
-taxa_mutacao = 0.05
+taxa_sobrevivencia = 0.40
+taxa_cruzamento = 0.60
+taxa_mutacao = 0.1
 
 parametros = {
     "cor": ["amarela", "azul", "branca", "verde", "vermelha"],
@@ -40,6 +40,10 @@ def fitness(solucao):
     pontuacao = 0
     for i in range(len(solucao)):
         casa = solucao[i]
+
+        # O Norueguês vive na primeira casa
+        if (casa["nacionalidade"] == "norueguês" and i == 0):
+            pontuacao += 1
 
         # O Inglês vive na casa Vermelha.
         if (casa["cor"] == "vermelha" and casa["nacionalidade"] == "ingles"):
