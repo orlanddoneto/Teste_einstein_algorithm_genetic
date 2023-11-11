@@ -42,7 +42,7 @@ def fitness(solucao):
 
         # O Norueguês vive na primeira casa
         if (casa["nacionalidade"] == "noruegues" and i == 0):
-            pontuacao += 1
+            pontuacao += 4
 
         # O Inglês vive na casa Vermelha.
         if (casa["cor"] == "vermelha" and casa["nacionalidade"] == "ingles"):
@@ -59,7 +59,7 @@ def fitness(solucao):
         # A casa Verde fica do lado esquerdo da casa Branca.
         if (i + 1 < len(solucao) and solucao[i]["cor"] == "verde"
                 and solucao[i + 1]["cor"] == "branca"):
-            pontuacao += 1
+            pontuacao += 4
 
         # O homem que vive na casa Verde bebe Café.
         if (casa["cor"] == "verde" and casa["bebida"] == "cafe"):
@@ -75,19 +75,19 @@ def fitness(solucao):
 
         # O homem que vive na casa do meio bebe Leite
         if (i == 2 and casa["bebida"] == "leite"):
-            pontuacao += 1
+            pontuacao += 4
 
         # O homem que fuma Blends vive ao lado do que tem Gatos
         if (casa["cigarro"] == "blends"):
             if ((i - 1 >= 0 and solucao[i - 1]["animal"] == "gatos")
                     or (i + 1 < len(solucao) and solucao[i + 1]["animal"] == "gatos")):
-                pontuacao += 1
+                pontuacao += 4
 
         # O homem que cria Cavalos vive ao lado do que fuma Dunhill
         if (casa["animal"] == "cavalos"):
             if ((i - 1 >= 0 and solucao[i - 1]["cigarro"] == "dunhill") or
                     (i + 1 < len(solucao) and solucao[i + 1]["cigarro"] == "dunhill")):
-                pontuacao += 1
+                pontuacao += 4
 
         # O homem que fuma BlueMaster bebe Cerveja
         if (casa["cigarro"] == "blue master" and casa["bebida"] == "cerveja"):
@@ -101,13 +101,13 @@ def fitness(solucao):
         if (casa["nacionalidade"] == "noruegues"):
             if ((i - 1 >= 0 and solucao[i - 1]["cor"] == "azul")
                     or (i + 1 < len(solucao) and solucao[i + 1]["cor"] == "azul")):
-                pontuacao += 1
+                pontuacao += 4
 
         # O homem que fuma Blends é vizinho do que bebe Água
         if (casa["cigarro"] == "blends"):
             if ((i - 1 >= 0 and solucao[i - 1]["bebida"] == "agua")
                     or (i + 1 < len(solucao) and solucao[i + 1]["bebida"] == "agua")):
-                pontuacao += 1
+                pontuacao += 4
 
     return pontuacao
 
@@ -136,11 +136,20 @@ def crossover(solucao1, solucao2):
 
 # Realiza mutação em uma solução
 def mutation(solucao):
-    pos_casa = random.randint(0,4)
+    pos_casa1 = random.randint(0,4)
+    pos_casa2 = random.randint(0,4)
+    while (pos_casa1 == pos_casa2):
+        pos_casa2 = random.randint(0, 4)
+
     pos_atributo = random.randint(0,4)
+
     atributos = ["cor","nacionalidade","bebida","cigarro","animal"]
     mutante = solucao
-    mutante[pos_casa][atributos[pos_atributo]] = parametros[atributos[pos_atributo]][random.randint(0,4)]
+
+    aux_atributo = ""
+    aux_atributo = mutante[pos_casa1][atributos[pos_atributo]]
+    mutante[pos_casa1][atributos[pos_atributo]] = mutante[pos_casa2][atributos[pos_atributo]]
+    mutante[pos_casa2][atributos[pos_atributo]] = aux_atributo
     return mutante
 
 
@@ -164,7 +173,7 @@ for i in range(tamanho_populacao):
     populacao.append(create())
 
 
-while (maior_pontuacao != 15):
+while (maior_pontuacao != 36):
     # log da geração atual
     log = "Geração {n_geracao}... maior pontuação: {pontuacao}..."
     print(log.format(n_geracao=quantidade_geracoes, solucao=resposta, pontuacao=maior_pontuacao))
