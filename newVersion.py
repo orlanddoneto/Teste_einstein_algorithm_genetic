@@ -7,7 +7,8 @@ from collections import defaultdict
 tamanho_populacao = 200
 taxa_sobrevivencia = 0.40
 taxa_cruzamento = 0.60
-taxa_mutacao = 0.05
+taxa_mutacao = 0.1
+taxa_migracao = 0.05
 
 parametros = {
     "cor": ["amarela", "azul", "branca", "verde", "vermelha"],
@@ -153,6 +154,10 @@ def mutation(solucao):
     return mutante
 
 
+def insere_imigrante():
+    return create()
+
+
 def roleta(tabela):
     tipos_de_pontos = []
     for i in tabela:
@@ -162,12 +167,23 @@ def roleta(tabela):
     result2 = random.choices(tipos_de_pontos, weights=tipos_de_pontos, k=1)[0]
     return  random.choice(tabela[result1]), random.choice(tabela[result2])
 
+
+def imprime_solucao(resposta):
+    i = 1
+    for casa in resposta:
+        print(f"==Casa {i}==")
+        i += 1
+        for chave, valor in casa.items():
+            print(f"{chave}: {valor}")
+        print()  # Adiciona uma linha em branco entre os dicionários para melhor legibilidade
+
+
 populacao = []
 geracao = []
 quantidade_geracoes = 0
 maior_pontuacao = 0
 resposta = []
-print(create())
+
 # Criando população inicial
 for i in range(tamanho_populacao):
     populacao.append(create())
@@ -178,8 +194,12 @@ while (maior_pontuacao != 36):
     log = "Geração {n_geracao}... maior pontuação: {pontuacao}..."
     print(log.format(n_geracao=quantidade_geracoes, solucao=resposta, pontuacao=maior_pontuacao))
 
+
     # Avaliando cada solução com a função fitness
+
+        #ranking se dá dessa forma: ranking[id_da_solucao] = pontuacao
     ranking = {}
+        #tabela de pontos se dá dessa forma: tabela_de_pontos [pontuacao] = solucao
     tabela_por_pontos = defaultdict(list)
 
     for i in range(tamanho_populacao):
@@ -188,39 +208,52 @@ while (maior_pontuacao != 36):
         tabela_por_pontos[pontuacao].append(solucao)
         ranking[i] = pontuacao
 
-    # Ordenando a geração atual para que os primeiros sejam os mais aptos
+    # Ordenando a tabela ranking para que os primeiros sejam os mais aptos
     ranking = dict(
         sorted(ranking.items(), key=lambda item: item[1], reverse=True))
+
+    #contem todas as pontuações em ordem decrescente
     classificacao = list(ranking.values())
+
     maior_pontuacao = classificacao[0]
     resposta = tabela_por_pontos[maior_pontuacao]
 
-    for posicao in range(len(classificacao)):
-        geracao.append(populacao[posicao])
+    # chaves_ranking recebe a lista de todas as chaves ordenadas decrescentemente, de acordo com a pontuação.
+    # a chave funciona como id de uma solucao
+    chaves_ranking = list(ranking.keys())
 
     # Sobrevivendo as melhores soluções
     for i in range(round(taxa_sobrevivencia * tamanho_populacao)):
-        populacao[i] = geracao[i]
+        geracao.append(populacao[chaves_ranking[i]])
 
     # Cruzamento utilizando roleta
     for i in range(round(taxa_sobrevivencia * tamanho_populacao),
-                   tamanho_populacao, 1):
+                   tamanho_populacao,2):
         if (i + 1 < tamanho_populacao):
             pai1, pai2 = roleta(tabela_por_pontos)
             filho1, filho2 = crossover(pai1, pai2)
-            populacao[i] = filho1
-            populacao[i + 1] = filho2
+            geracao.append(filho1)
+            geracao.append(filho2)
 
     # Realizando mutação
     for i in range(round(taxa_mutacao * tamanho_populacao),
                    tamanho_populacao):
         if random.random() <= taxa_mutacao:
-            populacao[i] = mutation(populacao[i])
+            geracao[i] = mutation(geracao[i])
 
+    #Adicionando imigrante
+    for i in range(round(taxa_migracao * tamanho_populacao),
+                   tamanho_populacao):
+        if random.random() <= taxa_migracao:
+            geracao[i] = insere_imigrante()
+
+
+    populacao = geracao
     geracao = []
     ranking = {}
     quantidade_geracoes += 1
     tabela_por_pontos.clear()
 
-log = "Geração {n_geracao}... Solução: {solucao}"
-print(log.format(n_geracao=quantidade_geracoes, solucao=resposta[0]))
+log = "Geração {n_geracao}... Solução: "
+print(log.format(n_geracao=quantidade_geracoes))
+imprime_solucao(resposta[0])
