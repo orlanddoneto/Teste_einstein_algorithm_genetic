@@ -4,11 +4,10 @@ import copy
 # Configurações Gerais
 from collections import defaultdict
 
-tamanho_populacao = 100
-quantidade_geracoes = 100
+tamanho_populacao = 200
 taxa_sobrevivencia = 0.40
 taxa_cruzamento = 0.60
-taxa_mutacao = 0.1
+taxa_mutacao = 0.05
 
 parametros = {
     "cor": ["amarela", "azul", "branca", "verde", "vermelha"],
@@ -42,7 +41,7 @@ def fitness(solucao):
         casa = solucao[i]
 
         # O Norueguês vive na primeira casa
-        if (casa["nacionalidade"] == "norueguês" and i == 0):
+        if (casa["nacionalidade"] == "noruegues" and i == 0):
             pontuacao += 1
 
         # O Inglês vive na casa Vermelha.
@@ -58,7 +57,8 @@ def fitness(solucao):
             pontuacao += 1
 
         # A casa Verde fica do lado esquerdo da casa Branca.
-        if (i + 1 < len(solucao) and solucao[i]["cor"] == "verde" and solucao[i + 1]["cor"] == "branca"):
+        if (i + 1 < len(solucao) and solucao[i]["cor"] == "verde"
+                and solucao[i + 1]["cor"] == "branca"):
             pontuacao += 1
 
         # O homem que vive na casa Verde bebe Café.
@@ -79,14 +79,14 @@ def fitness(solucao):
 
         # O homem que fuma Blends vive ao lado do que tem Gatos
         if (casa["cigarro"] == "blends"):
-            if ((i - 1 >= 0 and solucao[i - 1]["animal"] == "gatos") or (
-                    i + 1 < len(solucao) and solucao[i + 1]["animal"] == "gatos")):
+            if ((i - 1 >= 0 and solucao[i - 1]["animal"] == "gatos")
+                    or (i + 1 < len(solucao) and solucao[i + 1]["animal"] == "gatos")):
                 pontuacao += 1
 
         # O homem que cria Cavalos vive ao lado do que fuma Dunhill
         if (casa["animal"] == "cavalos"):
-            if ((i - 1 >= 0 and solucao[i - 1]["cigarro"] == "dunhill") or (
-                    i + 1 < len(solucao) and solucao[i + 1]["cigarro"] == "dunhill")):
+            if ((i - 1 >= 0 and solucao[i - 1]["cigarro"] == "dunhill") or
+                    (i + 1 < len(solucao) and solucao[i + 1]["cigarro"] == "dunhill")):
                 pontuacao += 1
 
         # O homem que fuma BlueMaster bebe Cerveja
@@ -99,14 +99,14 @@ def fitness(solucao):
 
         # O Norueguês vive ao lado da casa Azul
         if (casa["nacionalidade"] == "noruegues"):
-            if ((i - 1 >= 0 and solucao[i - 1]["cor"] == "azul") or (
-                    i + 1 < len(solucao) and solucao[i + 1]["cor"] == "azul")):
+            if ((i - 1 >= 0 and solucao[i - 1]["cor"] == "azul")
+                    or (i + 1 < len(solucao) and solucao[i + 1]["cor"] == "azul")):
                 pontuacao += 1
 
         # O homem que fuma Blends é vizinho do que bebe Água
         if (casa["cigarro"] == "blends"):
-            if ((i - 1 >= 0 and solucao[i - 1]["bebida"] == "agua") or (
-                    i + 1 < len(solucao) and solucao[i + 1]["bebida"] == "agua")):
+            if ((i - 1 >= 0 and solucao[i - 1]["bebida"] == "agua")
+                    or (i + 1 < len(solucao) and solucao[i + 1]["bebida"] == "agua")):
                 pontuacao += 1
 
     return pontuacao
@@ -118,88 +118,84 @@ def crossover(solucao1, solucao2):
     filho2 = []
 
     for i in range(5):
-        if (i < 2):
-            filho1.append(solucao1[i])
-            filho2.append(solucao2[i])
-        else:
-            filho1.append(solucao2[i])
-            filho2.append(solucao1[i])
+        filho1.append({"cor": solucao1[i]["cor"],
+                       "nacionalidade": solucao1[i]["nacionalidade"],
+                       "bebida": solucao2[i]["bebida"],
+                       "cigarro": solucao2[i]["cigarro"],
+                       "animal": solucao2[i]["animal"],
+                       })
+        filho2.append({"cor": solucao2[i]["cor"],
+                       "nacionalidade": solucao2[i]["nacionalidade"],
+                       "bebida": solucao1[i]["bebida"],
+                       "cigarro": solucao1[i]["cigarro"],
+                       "animal": solucao1[i]["animal"],
+                       })
 
     return filho1, filho2
 
 
 # Realiza mutação em uma solução
 def mutation(solucao):
-    return create()
+    pos_casa = random.randint(0,4)
+    pos_atributo = random.randint(0,4)
+    atributos = ["cor","nacionalidade","bebida","cigarro","animal"]
+    mutante = solucao
+    mutante[pos_casa][atributos[pos_atributo]] = parametros[atributos[pos_atributo]][random.randint(0,4)]
+    return mutante
+
 
 def roleta(tabela):
-    """Faz uma divisão diretamente proporcional para obter as porcentagens/probabilidades, de forma que
-    a tabela_probabilidades se dá assim: tabela_probabilidades[pontos] = probabilidade
-    Por fim, aplica-se uma estratégia para obter o cromossomo associado a determinada pontuação,
-    seguindo a probabilidade"""
-
     tipos_de_pontos = []
     for i in tabela:
         tipos_de_pontos.append(i)
 
-    #aplicando a divisão diretamente proporcional
-    somatorio_pontos = sum(tipos_de_pontos)
-    fator_proporcionalidade = 100//somatorio_pontos
-
-    tabela_probabilidades = {}
-
-    #usa-se essa variavel para garantir que não dê errado caso fator_proporcionalidade seja diferente de 100
-    teto_somatorio_porcentagem = 0
-
-    for i in range(len(tipos_de_pontos)):
-        #obtendo: tabela_probabilidades[pontos] = probabilidade
-        tabela_probabilidades[tipos_de_pontos[i]] = fator_proporcionalidade*tipos_de_pontos[i]
-        teto_somatorio_porcentagem += tabela_probabilidades[tipos_de_pontos[i]]
-
-    valor_escolhido = random.randint(1, teto_somatorio_porcentagem)
-    resultado = 0
-    acumulado = 0
-    for tipo, probabilidade in tabela_probabilidades.items():
-        acumulado += probabilidade
-        if valor_escolhido <= acumulado:
-            resultado = tipo
-            break
-    return random.choice(tabela[resultado]), random.choice(tabela[resultado])
-
+    result1 = random.choices(tipos_de_pontos, weights=tipos_de_pontos, k=1)[0]
+    result2 = random.choices(tipos_de_pontos, weights=tipos_de_pontos, k=1)[0]
+    return  random.choice(tabela[result1]), random.choice(tabela[result2])
 
 populacao = []
 geracao = []
+quantidade_geracoes = 0
 maior_pontuacao = 0
 resposta = []
+print(create())
 # Criando população inicial
 for i in range(tamanho_populacao):
     populacao.append(create())
 
-for repeticao in range(quantidade_geracoes):
+
+while (maior_pontuacao != 15):
+    # log da geração atual
+    log = "Geração {n_geracao}... maior pontuação: {pontuacao}..."
+    print(log.format(n_geracao=quantidade_geracoes, solucao=resposta, pontuacao=maior_pontuacao))
+
     # Avaliando cada solução com a função fitness
     ranking = {}
     tabela_por_pontos = defaultdict(list)
+
     for i in range(tamanho_populacao):
         solucao = populacao[i]
         pontuacao = fitness(solucao)
         tabela_por_pontos[pontuacao].append(solucao)
         ranking[i] = pontuacao
 
-
     # Ordenando a geração atual para que os primeiros sejam os mais aptos
-    ranking = dict(sorted(ranking.items(), key=lambda item: item[1], reverse=True))
+    ranking = dict(
+        sorted(ranking.items(), key=lambda item: item[1], reverse=True))
     classificacao = list(ranking.values())
     maior_pontuacao = classificacao[0]
     resposta = tabela_por_pontos[maior_pontuacao]
-    for posicao in classificacao:
+
+    for posicao in range(len(classificacao)):
         geracao.append(populacao[posicao])
 
     # Sobrevivendo as melhores soluções
     for i in range(round(taxa_sobrevivencia * tamanho_populacao)):
         populacao[i] = geracao[i]
 
-    # Cruzando o resto das soluções
-    for i in range(round(taxa_sobrevivencia * tamanho_populacao), tamanho_populacao, 2):
+    # Cruzamento utilizando roleta
+    for i in range(round(taxa_sobrevivencia * tamanho_populacao),
+                   tamanho_populacao, 1):
         if (i + 1 < tamanho_populacao):
             pai1, pai2 = roleta(tabela_por_pontos)
             filho1, filho2 = crossover(pai1, pai2)
@@ -207,13 +203,15 @@ for repeticao in range(quantidade_geracoes):
             populacao[i + 1] = filho2
 
     # Realizando mutação
-    for i in range(round(taxa_sobrevivencia * tamanho_populacao), tamanho_populacao):
-        if random.random() < taxa_mutacao:
+    for i in range(round(taxa_mutacao * tamanho_populacao),
+                   tamanho_populacao):
+        if random.random() <= taxa_mutacao:
             populacao[i] = mutation(populacao[i])
 
     geracao = []
     ranking = {}
+    quantidade_geracoes += 1
+    tabela_por_pontos.clear()
 
-print(f"{resposta}\n{maior_pontuacao}")
-
-# solução: [{"cor": "amarela","nacionalidade": "noroegues","bebida": "água", "cigarro": "blends", "animal": "cachorros"}, ....]
+log = "Geração {n_geracao}... Solução: {solucao}"
+print(log.format(n_geracao=quantidade_geracoes, solucao=resposta[0]))
