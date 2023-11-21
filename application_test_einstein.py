@@ -1,13 +1,13 @@
 import random
 import copy
-
-# Configurações Gerais
+import matplotlib.pyplot as plt
 from collections import defaultdict
 
-tamanho_populacao = 200
-taxa_sobrevivencia = 0.40
-taxa_cruzamento = 0.60
-taxa_mutacao = 0.1
+# Configurações Gerais
+tamanho_populacao = 400
+taxa_sobrevivencia = 0.35
+taxa_cruzamento = 0.65
+taxa_mutacao = 0.05
 taxa_migracao = 0.05
 
 parametros = {
@@ -109,7 +109,6 @@ def fitness(solucao):
             if ((i - 1 >= 0 and solucao[i - 1]["bebida"] == "agua")
                     or (i + 1 < len(solucao) and solucao[i + 1]["bebida"] == "agua")):
                 pontuacao += 4
-
     return pontuacao
 
 
@@ -177,23 +176,25 @@ def imprime_solucao(resposta):
             print(f"{chave}: {valor}")
         print()  # Adiciona uma linha em branco entre os dicionários para melhor legibilidade
 
-
 populacao = []
 geracao = []
 quantidade_geracoes = 0
 maior_pontuacao = 0
 resposta = []
 
+x_media = []
+y_media = []
+x_maior = []
+y_maior = []
+
 # Criando população inicial
 for i in range(tamanho_populacao):
     populacao.append(create())
-
 
 while (maior_pontuacao != 36):
     # log da geração atual
     log = "Geração {n_geracao}... maior pontuação: {pontuacao}..."
     print(log.format(n_geracao=quantidade_geracoes, solucao=resposta, pontuacao=maior_pontuacao))
-
 
     # Avaliando cada solução com a função fitness
 
@@ -201,12 +202,14 @@ while (maior_pontuacao != 36):
     ranking = {}
         #tabela de pontos se dá dessa forma: tabela_de_pontos [pontuacao] = solucao
     tabela_por_pontos = defaultdict(list)
-
+    media_pontos = 0
     for i in range(tamanho_populacao):
         solucao = populacao[i]
         pontuacao = fitness(solucao)
         tabela_por_pontos[pontuacao].append(solucao)
         ranking[i] = pontuacao
+        media_pontos += pontuacao
+    media_pontos = media_pontos / tamanho_populacao
 
     # Ordenando a tabela ranking para que os primeiros sejam os mais aptos
     ranking = dict(
@@ -236,8 +239,7 @@ while (maior_pontuacao != 36):
             geracao.append(filho2)
 
     # Realizando mutação
-    for i in range(round(taxa_mutacao * tamanho_populacao),
-                   tamanho_populacao):
+    for i in range(round(taxa_mutacao * tamanho_populacao), tamanho_populacao):
         if random.random() <= taxa_mutacao:
             geracao[i] = mutation(geracao[i])
 
@@ -247,13 +249,21 @@ while (maior_pontuacao != 36):
         if random.random() <= taxa_migracao:
             geracao[i] = insere_imigrante()
 
-
     populacao = geracao
     geracao = []
     ranking = {}
     quantidade_geracoes += 1
     tabela_por_pontos.clear()
+    x_media.append(quantidade_geracoes)
+    y_media.append(media_pontos)
+    x_maior.append(quantidade_geracoes)
+    y_maior.append(maior_pontuacao)
 
 log = "Geração {n_geracao}... Solução: "
 print(log.format(n_geracao=quantidade_geracoes))
 imprime_solucao(resposta[0])
+
+plt.plot(x_media, y_media, color='blue')
+plt.plot(x_maior, y_maior, color='green')
+plt.show()
+
